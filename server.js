@@ -1,9 +1,9 @@
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-import connectDB from "./config/db.js";
-import authRoutes from "./routes/AuthRoutes.js";
-import userRoutes from "./routes/UserRoutes.js";
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const connectDB = require("./config/db.js");
+const authRoutes = require("./routes/AuthRoutes.js");
+const userRoutes = require("./routes/UserRoutes.js");
 
 dotenv.config();
 connectDB();

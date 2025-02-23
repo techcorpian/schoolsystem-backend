@@ -1,6 +1,6 @@
-import jwt from "jsonwebtoken";
+const jwt = require("jsonwebtoken");
 
-export const authMiddleware = (req, res, next) => {
+const authMiddleware = (req, res, next) => {
    const token = req.header("x-auth-token");
    if (!token) return res.status(401).json({ message: "Access Denied" });
 
@@ -14,7 +14,7 @@ export const authMiddleware = (req, res, next) => {
 };
 
 // Role-based Access Control Middleware
-export const authorizeRoles = (...roles) => {
+const authorizeRoles = (...roles) => {
    return (req, res, next) => {
       if (!roles.includes(req.user.role)) {
          return res.status(403).json({ message: "Access Forbidden" });
@@ -22,3 +22,5 @@ export const authorizeRoles = (...roles) => {
       next();
    };
 };
+
+module.exports = { authMiddleware, authorizeRoles };

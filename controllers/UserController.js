@@ -1,22 +1,29 @@
-import User from "../models/User.js";
-import UserGroup from "../models/Usergroup.js";
+const User = require("../models/User.js");
+const UserGroup = require("../models/Usergroup.js");
+const bcrypt = require("bcryptjs");
 
 // ------------------------ Users ------------------------------ //
 
-//get users
-export const getUsers = async (req, res) => {
+// Get users
+const getUsers = async (req, res) => {
     try {
-        const users = await User.find().populate("role");
+        const users = await User.find({ blockstatus: 0, deletestatus: 0 }).populate("role");
         res.json(users);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
-//insert users
-export const insertUsers = async (req, res) => {
+// Insert users
+const insertUsers = async (req, res) => {
     try {
-        const user = new User(req.body);
+        const { password, ...userData } = req.body;
+
+        // Generate salt and hash the password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const user = new User({ ...userData, password: hashedPassword });
         await user.save();
         res.json(user);
     } catch (err) {
@@ -24,21 +31,43 @@ export const insertUsers = async (req, res) => {
     }
 };
 
-//update users
-export const updateUsers = async (req, res) => {
+// Get User by ID
+const getUserById = async (req, res) => {
     try {
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: "User not found" });
         res.json(user);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
-//delete users
-export const deleteUsers = async (req, res) => {
+// Update users
+const updateUsers = async (req, res) => {
     try {
-        await User.findByIdAndDelete(req.params.id);
-        res.json({ message: "User deleted" });
+        const { password, ...updateData } = req.body;
+        const id = req.params.id;
+        const user = await User.findByIdAndUpdate(id, updateData, { new: true });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Delete users
+// const deleteUsers = async (req, res) => {
+//     try {
+//         await User.findByIdAndDelete(req.params.id);
+//         res.json({ message: "User deleted" });
+//     } catch (err) {
+//         res.status(500).json({ error: err.message });
+//     }
+// };
+
+const deleteUsers = async (req, res) => {
+    try {
+        await User.findByIdAndUpdate(req.params.id, { deletestatus: 1, blockstatus: 1 });
+        res.json({ message: "User deleted Successfully" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -46,8 +75,8 @@ export const deleteUsers = async (req, res) => {
 
 // ------------------------ Usergroup ------------------------------ //
 
-//get usergroup
-export const getUsergroup = async (req, res) => {
+// Get usergroup
+const getUsergroup = async (req, res) => {
     try {
         const groups = await UserGroup.find();
         res.json(groups);
@@ -56,8 +85,8 @@ export const getUsergroup = async (req, res) => {
     }
 };
 
-//insert usergroup
-export const insertUsergroup = async (req, res) => {
+// Insert usergroup
+const insertUsergroup = async (req, res) => {
     try {
         const group = new UserGroup(req.body);
         await group.save();
@@ -67,8 +96,8 @@ export const insertUsergroup = async (req, res) => {
     }
 };
 
-//update usergroup
-export const updateUsergroup = async (req, res) => {
+// Update usergroup
+const updateUsergroup = async (req, res) => {
     try {
         const group = await UserGroup.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json(group);
@@ -77,12 +106,25 @@ export const updateUsergroup = async (req, res) => {
     }
 };
 
-//delete usergroup
-export const deleteUsergroup = async (req, res) => {
+// Delete usergroup
+const deleteUsergroup = async (req, res) => {
     try {
         await UserGroup.findByIdAndDelete(req.params.id);
         res.json({ message: "Group deleted" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+};
+
+// Exporting functions
+module.exports = {
+    getUsers,
+    insertUsers,
+    getUserById,
+    updateUsers,
+    deleteUsers,
+    getUsergroup,
+    insertUsergroup,
+    updateUsergroup,
+    deleteUsergroup,
 };
